@@ -67,11 +67,13 @@ app.get('/health', (req: Request, res: Response) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 WorkTrackr API server is running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 API Documentation: http://localhost:${PORT}/api`);
-});
+// Start server only in development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 WorkTrackr API server is running on port ${PORT}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 API Documentation: http://localhost:${PORT}/api`);
+  });
+}
 
 export default app; 
