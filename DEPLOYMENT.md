@@ -22,7 +22,7 @@ JWT_EXPIRES_IN="15m"
 JWT_REFRESH_EXPIRES_IN="7d"
 NODE_ENV="production"
 MAX_FILE_SIZE="2097152"
-UPLOAD_PATH="uploads/logos"
+BLOB_READ_WRITE_TOKEN="your-vercel-blob-token"
 ```
 
 ### Deployment Steps
@@ -70,10 +70,11 @@ https://your-project-name.vercel.app/api/user/profile
 
 ### Important Notes
 
-1. **File Uploads**: In production, consider using cloud storage (AWS S3, Cloudinary) instead of local file storage
+1. **File Uploads**: Uses Vercel Blob storage for file uploads (configured with store ID: `store_jqbxVDli3n8vLyVO`)
 2. **Database**: Ensure your PostgreSQL database allows connections from Vercel's IP ranges
 3. **Environment Variables**: Never commit sensitive environment variables to your repository
 4. **CORS**: Update CORS settings if your frontend is on a different domain
+5. **Blob Storage**: Get your `BLOB_READ_WRITE_TOKEN` from Vercel dashboard under Storage > Blob
 
 ### Troubleshooting
 

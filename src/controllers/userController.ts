@@ -1,9 +1,11 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest, RegisterUserData, LoginUserData, UpdateProfileData } from '../types/auth';
 import { UserService } from '../services/userService';
-import { deleteUploadedFile } from '../middleware/uploadMiddleware';
+import { BlobService } from '../services/blobService';
+import { ValidationError } from '../utils/errors';
 
 const userService = new UserService();
+const blobService = new BlobService();
 
 export class UserController {
   async registerUser(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
@@ -168,15 +170,36 @@ export class UserController {
         return;
       }
 
+      // Validate file type and size
+      if (!blobService.isValidImageType(req.file.mimetype)) {
+        res.status(400).json({
+          success: false,
+          message: 'Only image files (JPEG, PNG, GIF, WebP) are allowed',
+          error: 'INVALID_FILE_TYPE'
+        });
+        return;
+      }
+
+      if (!blobService.isValidFileSize(req.file.size)) {
+        res.status(400).json({
+          success: false,
+          message: 'File too large. Maximum size is 2MB.',
+          error: 'FILE_TOO_LARGE'
+        });
+        return;
+      }
+
       try {
+        // Upload file to Vercel Blob
+        const uploadResult = await blobService.uploadFile(req.file, req.user.id);
+
         // Delete old logo if exists
         if (req.user.companyLogo) {
-          deleteUploadedFile(req.user.companyLogo);
+          await blobService.deleteFile(req.user.companyLogo);
         }
 
-        // Update user with new logo path
-        const logoPath = req.file.path;
-        const updatedUser = await userService.updateUserLogo(req.user.id, logoPath);
+        // Update user with new logo URL
+        const updatedUser = await userService.updateUserLogo(req.user.id, uploadResult.url);
         
         // Return sanitized updated user data
         const sanitizedUser = userService.sanitizeUser(updatedUser);
@@ -186,14 +209,10 @@ export class UserController {
           message: 'Logo uploaded successfully',
           data: { 
             user: sanitizedUser,
-            logoUrl: `/uploads/logos/${req.file.filename}`
+            logoUrl: uploadResult.url
           }
         });
       } catch (error) {
-        // If database update fails, delete the uploaded file
-        if (req.file) {
-          deleteUploadedFile(req.file.path);
-        }
         throw error;
       }
     } catch (error) {

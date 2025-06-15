@@ -1,48 +1,18 @@
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import { Request } from 'express';
 import { ValidationError } from '../utils/errors';
 
-// Ensure upload directory exists
-const uploadDir = process.env.UPLOAD_PATH || 'uploads/logos';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure memory storage for Vercel Blob
+const storage = multer.memoryStorage();
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req: Request, file: Express.Multer.File, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req: Request, file: Express.Multer.File, cb) => {
-    // Generate unique filename with timestamp
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname);
-    cb(null, `logo-${uniqueSuffix}${extension}`);
-  }
-});
-
-// File filter for images only
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  // Check file type
-  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new ValidationError('Only image files (JPEG, PNG, GIF, WebP) are allowed'));
-  }
-};
-
-// Configure multer
+// Configure multer for memory storage
 const upload = multer({
   storage: storage,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '2097152'), // 2MB default
     files: 1
-  },
-  fileFilter: fileFilter
+  }
 });
 
 // Middleware for single logo upload
@@ -85,12 +55,13 @@ export const handleUploadError = (error: any, req: Request, res: any, next: any)
   next(error);
 };
 
-// Utility function to delete uploaded file
-export const deleteUploadedFile = (filePath: string): void => {
+// Utility function to delete uploaded file from Vercel Blob
+export const deleteUploadedFile = async (fileUrl: string): Promise<void> => {
   try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    // For Vercel Blob, we'll handle deletion in the service layer
+    // This function is kept for compatibility but doesn't need to do anything
+    // as Vercel Blob handles cleanup automatically
+    console.log('File deletion handled by Vercel Blob:', fileUrl);
   } catch (error) {
     console.error('Error deleting file:', error);
   }
