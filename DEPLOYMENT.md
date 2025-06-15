@@ -52,7 +52,7 @@ vercel --prod
 
 The project includes these Vercel-specific files:
 
-- `vercel.json` - Vercel configuration
+- `vercel.json` - Vercel configuration with rewrites
 - `api/index.ts` - Serverless function entry point
 - `public/.gitkeep` - Required public directory
 - `.vercelignore` - Files to exclude from deployment
