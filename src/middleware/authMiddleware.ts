@@ -24,7 +24,7 @@ export const authenticateToken = async (
       throw new Error('JWT secret not configured');
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as TokenPayload;
+    const decoded = jwt.verify(token, jwtSecret as jwt.Secret) as TokenPayload;
     const user = await userService.getUserById(decoded.userId);
     
     req.user = user;
@@ -64,7 +64,7 @@ export const optionalAuth = async (
     if (token) {
       const jwtSecret = process.env.JWT_SECRET;
       if (jwtSecret) {
-        const decoded = jwt.verify(token, jwtSecret) as TokenPayload;
+        const decoded = jwt.verify(token, jwtSecret as jwt.Secret) as TokenPayload;
         const user = await userService.getUserById(decoded.userId);
         req.user = user;
       }

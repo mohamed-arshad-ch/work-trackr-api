@@ -65,15 +65,15 @@ export class UserService {
     }
 
     const accessToken = jwt.sign(
-      payload,
-      jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+      payload as object,
+      jwtSecret as jwt.Secret,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '15m' } as jwt.SignOptions
     );
 
     const refreshToken = jwt.sign(
-      payload,
-      jwtRefreshSecret,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      payload as object,
+      jwtRefreshSecret as jwt.Secret,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
 
     return { accessToken, refreshToken };
@@ -167,7 +167,12 @@ export class UserService {
 
   async validateRefreshToken(refreshToken: string): Promise<User> {
     try {
-      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as TokenPayload;
+      const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+      if (!jwtRefreshSecret) {
+        throw new Error('JWT refresh secret not configured');
+      }
+
+      const decoded = jwt.verify(refreshToken, jwtRefreshSecret as jwt.Secret) as TokenPayload;
       
       const user = await prisma.user.findFirst({
         where: {
